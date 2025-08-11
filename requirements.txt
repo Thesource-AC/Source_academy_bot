@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-gspread
-oauth2client
-python-telegram-bot
-=======
 gspread
 oauth2client
 python-telegram-bot
 httpx
->>>>>>> 4f84226 (Initial commit)

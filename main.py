@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
@@ -16,12 +17,15 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+# ضع توكن البوت هنا مباشرة - غيّره عند رفعه على السيرفر لمتغير بيئة أو خزن آمن
 TELEGRAM_TOKEN = "8438230728:AAFI4QGU5bdu7ORIsOjWrypfU4lq1m7LTnM"
+
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # تأكد من تعيين هذا المتغير للويبهوك الصحيح في بيئتك
 
 (ASK_PHONE, ASK_NAME, ASK_UNI, ASK_COLLEGE, ASK_MAJOR, ASK_SUBJECT, ASK_SOURCE, ASK_RECOMMENDER, CONFIRMATION) = range(9)
 
-# الاتصال بجوجل شيت
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope =  ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
 sheet = client.open("The Source Academy").worksheet("الحجز")
@@ -142,6 +146,7 @@ async def finish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return ConversationHandler.END
 
+
 def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
@@ -162,8 +167,19 @@ def main():
     )
 
     app.add_handler(conv_handler)
-    print("✅ Bot is running...")
-    app.run_polling()
+
+    # نستخدم webhook بدلاً من polling
+    port = int(os.environ.get('PORT', '8443'))  # تأكد من أن هذا متغير بيئة مضبوط حسب المنصة
+    print("✅ Bot is running with webhook...")
+
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        url_path=TELEGRAM_TOKEN,
+        webhook_url=app.run_polling()
+
+    )
+
 
 if __name__ == "__main__":
     main()
